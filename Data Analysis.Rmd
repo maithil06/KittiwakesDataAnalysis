@@ -1,0 +1,326 @@
+---
+title: "Assignment_MTHS4005_COURSEWORK-2_20536655"
+author: "Maithil Tandel"
+output: html_notebook
+---
+```{r echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+```
+```{r}
+library(ggplot2)
+library(tidyr)
+library(gplots)
+library(readr)
+library(reshape2)
+library(dplyr)
+library(tidyverse)
+```
+Import the necessary libraries which maybe helpful for the coursework.
+
+Question 1
+```{r}
+observation_data<-read.csv("Kittiwake_Observation_20536655.csv")
+head(observation_data)
+```
+```{r}
+summary(observation_data)
+```
+
+```{r}
+str(observation_data)
+```
+A statistical informatrion provided which will help us to proceed further for final code.
+
+```{r}
+sum(is.na(observation_data))
+```
+```{r}
+Dawn <- observation_data$dawn
+hist(Dawn, main="Histogram for Dawn Observations", xlab="Observations", col="blue")
+```
+```{r}
+Noon <- observation_data$noon
+hist(Noon, main="Histogram for Noon Observations", xlab="Observations", col="lightblue")
+```
+```{r}
+mid_afternoon<-observation_data$mid.afternoon
+hist(mid_afternoon, main="Histogram for Mid Afternoon Observations", xlab="Observations", col="red")
+```
+```{r}
+dusk<-observation_data$dusk
+hist(dusk, main = 'Histogram for Dusk', xlab = "Observations", col='green')
+```
+```{r}
+boxplot(observation_data, main="Sightings at Different times of the Day ", xlab="Time of Day", ylab="Observations", names = c("Dawn", "Noon", "Mid-Afternoon", "Dusk"), col = c("lightblue", "lightgreen", "lightpink", "lightyellow"),border = "black")
+```
+```{r}
+mean_dusk <- mean(observation_data$dusk)
+sd_dusk <- sd(observation_data$dusk)
+n_dusk <- length(observation_data$dusk)
+cat("Mean at dusk:", mean_dusk, "\n")
+cat("Standard Deviation at dusk:", sd_dusk, "\n")
+cat("Number of observations at dusk:", n_dusk, "\n")
+```
+```{r}
+par(mfrow = c(2, 2)) # Set layout for 4 plots
+hist(Dawn, main = "Dawn Observations", xlab = "Observations", col = "lightblue")
+hist(Noon, main = "Noon Observations", xlab = "Observations", col = "lightgreen")
+hist(mid_afternoon, main = "Mid-Afternoon Observations", xlab = "Observations", col = "lightyellow")
+hist(dusk, main = "Dusk Observations", xlab = "Observations", col = "lightpink")
+```
+```{r}
+library(tidyverse)
+
+mean_dusk <- mean(observation_data$dusk)
+std_dusk <- sd(observation_data$dusk)
+# Number of observations
+n <- length(observation_data$dusk)
+
+# Calculate the 90% confidence interval
+error_margin <- qt(0.95, df = n - 1) * std_dusk / sqrt(n)
+lower_bound <- mean_dusk - error_margin
+upper_bound <- mean_dusk + error_margin
+
+# Output the confidence interval
+cat("The 90% confidence interval for the mean number of kittiwakes observed at dusk is between", lower_bound, "and", upper_bound)
+```
+```{r}
+t_test_result <- t.test(observation_data$dusk, conf.level = 0.90)
+
+
+confidence_interval <- t_test_result$conf.int
+
+cat("90% Confidence Interval:", confidence_interval[1], confidence_interval[2], "\n")
+```
+```{r}
+mean_dusk <- mean(observation_data$dusk)
+std_error <- sd(observation_data$dusk) / sqrt(length(observation_data$dusk))
+ci_lower <- mean_dusk - qt(0.95, df = length(observation_data$dusk) - 1) * std_error
+ci_upper <- mean_dusk + qt(0.95, df = length(observation_data$dusk) - 1) * std_error
+
+# Create a dataframe for plotting
+plot_data <- data.frame(
+  x = c("Mean", "Lower Bound", "Upper Bound"),
+  y = c(mean_dusk, lower_bound, upper_bound)
+)
+
+# Plotting
+ggplot(observation_data, aes(x = dusk)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+  geom_vline(xintercept = mean_dusk, color = "red", linetype = "dashed", size = 1) +
+  geom_vline(xintercept = ci_lower, color = "green", linetype = "dashed", size = 1) +
+  geom_vline(xintercept = ci_upper, color = "green", linetype = "dashed", size = 1) +
+  labs(title = "Histogram of Dusk Observations with 90% Confidence Interval",
+       x = "Dusk Observations",
+       y = "Frequency")
+```
+Question 2
+```{r}
+historical_data = read.csv("Kittiwake_Historical_20536655.csv")
+head(data)
+```
+Question 2(a)
+```{r}
+mat = as.matrix(data[,-1],6,7)
+rownames(mat) = data[,1]
+chisq.test(mat, correct = F)
+```
+Question-2(b)
+```{r}
+kittiwake_data <- read.csv("Kittiwake_Historical_20536655.csv")
+
+# Linear model for Site D
+lm_site_d <- lm(`Site.D` ~ X, data = kittiwake_data)
+lm_site_d
+```
+```{r}
+plot(kittiwake_data$X,kittiwake_data$Site.D,xlab="Years",ylab="site D breeding pairs observations")
+abline(a=lm_site_d$coef[1],b=lm_site_d$coef[2])
+```
+```{r}
+residual_summary <- summary(lm_site_d$residuals)
+summary(lm_site_d$residuals)
+```
+```{r}
+residual_mean <- mean(lm_site_d$residuals)
+residual_sd <- sd(lm_site_d$residuals)
+
+range_lower <- residual_mean - 2 * residual_sd
+range_upper <- residual_mean + 2 * residual_sd
+range_lower
+```
+```{r}
+hist(lm_site_d$residuals,main="Breeding Pairs  vs Years",xlab="Residuals",freq=FALSE) # Plot histogram of residuals
+curve(dnorm(x,0,summary(lm_site_d)$sigma),-8.2,4.2,lty=2,add=TRUE)
+```
+```{r}
+# Predicting for the year 2011
+y<-predict(lm_site_d, newdata = data.frame(X = 2011), interval='prediction')
+y
+```
+```{r}
+cat("Estimated number of breeding pairs at Site D in 2011:", round(y[1],2), "\n")
+```
+```{r}
+cat("Prediction interval:\n", round(y[2], 2), " to ", round(y[3], 2), "\n")
+```
+
+
+```{r}
+plot(kittiwake_data$X, kittiwake_data$Site.D, xlab = "Years", ylab = "Site B Breeding Pairs Observations", main = "Breeding Pairs vs Years estimation using Linear Model")
+
+# Adding the estimated number of breeding pairs for 2013
+points(2011, y[1], pch = 16, col = "red", cex = 1.5)
+
+# Adding a vertical line at the year 2013
+abline(v = 2011, col = "blue", lty = 2)
+abline(h = y[1], col = "green", lty = 1)
+
+```
+```{r}
+approx(x = kittiwake_data$X, y=kittiwake_data$Site.D, xout = 2011)
+
+```
+
+```{r}
+y1<-approx(x = data$X, y = data$`Site D`, xout = 2011)
+plot(x = kittiwake_data$X, y=kittiwake_data$Site.D,xlab = 'Years',ylab = 'Observations of Site D Breeding pairs', title('Estimated Using Linear Interpolation'))
+points(2011, approx(x = kittiwake_data$X, y=kittiwake_data$Site.D, xout = 2011)[2], pch = 16, col = "red", cex = 1.5)
+# Adding a vertical line at the year 2013
+abline(v = 2011, col = "blue", lty = 2)
+abline(h=approx(x = kittiwake_data$X, y=kittiwake_data$Site.D, xout = 2011), col="green", lwd=2)
+```
+Question-3: Measurement Data
+```{r}
+kittiwake_data_measurement <- read.csv("Kittiwake_Measurement_20536655.csv")
+head(kittiwake_data_measurement)
+```
+Question 3(a)
+```{r}
+# Boxplot for Weight by Sub-species
+par(mfrow=c(1,3))
+plot(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Red-legged','Weight']),main='Weight of Black Legged',lwd=2, col='red', xlim=c(290,410))
+lines(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Black-legged','Weight']),main='Weight of Black Legged',lwd=2)
+legend('topleft',c('Black-legged','Red-Legged'),lty=1,lwd=2,bty='n',col=c('black','red'))
+
+plot(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Black-legged','Wingspan']),main='Wingspan of Black Legged',lwd=2, xlim=c(60,120),ylim = c(0.00,0.08))
+lines(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Red-legged','Wingspan']),main='Wingspan of Black Legged', col='red',lwd=2)
+legend('topleft',c('Black-legged','Red-Legged'),lty=1,lwd=2,bty='n',col=c('black','red'))
+
+plot(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Red-legged','Culmen']),main='Culmen of Black Legged',lwd=2,col='red', xlim=c(20,60))
+lines(density(kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Black-legged','Culmen']),main='Culmen of Black Legged', col='black',lwd=2)
+legend('topright',c('Black-legged','Red-Legged'),lty=1,lwd=2,bty='n',col=c('black','red'))
+
+```
+```{r}
+ggplot(kittiwake_data_measurement, aes(x=Sub.species, y=Weight, fill=Sub.species))+ geom_boxplot() + labs(title = 'Weight Summary', x='Sub Species',y='Weight')
+ggplot(kittiwake_data_measurement, aes(x=Sub.species, y=Wingspan, fill=Sub.species))+ geom_boxplot() + labs(title = 'Wingspan Summary', x='Sub Species',y='Wingspan')
+ggplot(kittiwake_data_measurement, aes(x=Sub.species, y=Culmen, fill=Sub.species))+ geom_boxplot() + labs(title = 'Culmen Summary', x='Sub Species',y='Culmen')
+```
+Question 3(b)
+```{r}
+black_legged_data <- subset(kittiwake_data_measurement, Sub.species == 'Black-legged')
+red_legged_data <- subset(kittiwake_data_measurement, Sub.species == 'Red-legged')
+
+# Perform correlation test for Black-legged kittiwakes
+cor_test_black_legged <- cor.test(black_legged_data$Wingspan, black_legged_data$Culmen)
+# Correlation test for Red-legged
+red_legged <- subset(kittiwake_data_measurement, `Sub.species` == "Red-legged")
+cor.test(red_legged$Wingspan, red_legged$Culmen)
+
+# Correlation test for Black-legged
+black_legged <- subset(kittiwake_data_measurement, `Sub.species` == "Black-legged")
+cor.test(black_legged$Wingspan, black_legged$Culmen)
+
+```
+```{r}
+plot(black_legged_data$Wingspan, black_legged_data$Culmen, main="Scatter Plot - Black-legged Kittiwakes", 
+     xlab="Wingspan", ylab="Culmen Length", pch=19, col="blue")
+```
+```{r}
+plot(red_legged_data$Wingspan, red_legged_data$Culmen, main="Scatter Plot - Red-legged Kittiwakes", 
+     xlab="Wingspan", ylab="Culmen Length", pch=19, col="red")
+```
+Question 3(c)
+```{r}
+ttest_weight <- t.test(Weight ~ Sub.species, data = kittiwake_data_measurement)
+
+# Print the result
+print(ttest_weight)
+```
+Question-3(d)
+
+```{r}
+my_t_test = function(var){
+  black = kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Black-legged',var]
+  red = kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Red-legged',var]
+  
+  abs = t.test(black, red, alternative = 'greater',var.equal = T)
+  
+  return(ifelse(abs$p.value > 0.05,
+         paste('pvalue = ',round(abs$p.value*100,2),'%, is more than 5%. Thus we have insufficient statistical proof to reject H0 at 5% LS.',
+               'The average',var,'is equal for both sub-species'),
+         paste('pvalue = ',round(abs$p.value*100,2),'%, is less than 5%. Thus we have sufficient statistical proof to reject H0 at 5% LS.',
+               'The average',var,'is not equal for both sub-species')
+         ))
+}
+my_t_test('Weight')   
+my_t_test('Culmen')   
+my_t_test('Wingspan') 
+
+```
+```{r}
+my_test_for_sigma = function(var){
+  black = kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Black-legged',var]
+  red = kittiwake_data_measurement[kittiwake_data_measurement$Sub.species=='Red-legged',var]
+  abs = var.test(black, red, alternative = 'greater')
+  return(ifelse(abs$p.value > 0.05,
+                paste('pvalue = ',round(abs$p.value*100,2),'%, is more than 5%. Thus we have not much evidence to reject Null Hypothesis (H0) at 5% LS.',
+                      'The variance of',var,'is equal for both sub-species'),
+                paste('pvalue = ',round(abs$p.value*100,2),'%, is less than 5%. Thus we have good evidence to reject Null Hypothesis (H0) at 5% LS.',
+                      'The variance of',var,'is not equal for both sub-species')
+  ))
+}
+my_test_for_sigma('Weight')   
+my_test_for_sigma('Culmen')   
+my_test_for_sigma('Wingspan')
+```
+Question 4: Location Data
+```{r}
+kittiwake_data_location = read.csv('Kittiwake_Location_20536655.csv')
+str(kittiwake_data_location)
+kittiwake_data_location$Coast.direction = as.factor(kittiwake_data_location$Coast.direction)
+```
+Question 4(a)
+```{r}
+# linear regression
+fit = lm(Breeding.pairs ~ Coast.direction +sandeel + Summer.temp + cliff.height, data = kittiwake_data_location)
+summary(fit)
+cat('AIC Score is:',AIC(fit))
+```
+```{r}
+AIC(fit)
+```
+```{r}
+fita = lm(Breeding.pairs ~ Coast.direction + sandeel  + cliff.height -1, data = kittiwake_data_location)
+summary(fita)
+AIC(fita)  
+```
+Question 4(b)
+```{r}
+fit2 = lm(log(Breeding.pairs) ~ Coast.direction +sandeel +Summer.temp +cliff.height, data = kittiwake_data_location)
+summary(fit2)
+cat('AIC Score is:',AIC(fit2))
+```
+```{r}
+fit2a = lm(log(Breeding.pairs) ~ Coast.direction + sandeel  + cliff.height -1, data = kittiwake_data_location)
+summary(fit2a) 
+cat('AIC Score is:',AIC(fit2a))
+```
+Question 4(e)
+```{r}
+new.data = data.frame(Coast.direction='West', sandeel=1.06, Summer.temp=21.9, cliff.height=3.68)
+exp(predict(fit2a, new.data,interval = 'prediction',level = 0.90))
+```
+
+
